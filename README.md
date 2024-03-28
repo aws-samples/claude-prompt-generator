@@ -1,11 +1,12 @@
-## My Project
+## Quick Start
 
-TODO: Fill this README out!
+Fill your OPENAI_API_KEY, OPENAI_API_URL and REGION_NAME (Note this is refer to AWS region, e.g. us-east-1) in the .env file, following the .env.example file.
 
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
+```bash
+pip install -r requirements.txt
+python demo.py
+```
+Login to the URL in the output, normally like http://127.0.0.1:7860, and input your original OpenAI prompt to get the tranformed Claude prompt, then you can copy the Claude prompt to the evaluation tab to compare, evaluate and iterate until such prompt is align or surpass the original prompt.
 
 ## Security
 
