@@ -3,6 +3,7 @@
 Fill your OPENAI_API_KEY, OPENAI_API_URL and REGION_NAME (Note this is refer to AWS region, e.g. us-east-1) in the .env file, following the .env.example file.
 
 ```bash
+cd src
 pip install -r requirements.txt
 python demo.py
 ```
