@@ -117,10 +117,13 @@ def generate_openai_response(prompt, model_id):
     return completion.choices[0].message.content
 
 
-def evaluate_prompt(original_prompt, revised_prompt, openai_model_id, aws_model_id):
+def invoke_prompt(original_prompt, revised_prompt, openai_model_id, aws_model_id):
     openai_result = generate_openai_response(original_prompt, openai_model_id)
     aws_result = generate_bedrock_response(revised_prompt, aws_model_id)
     return openai_result, aws_result
+
+def evaluate_response(openai_output, aws_output, eval_model_id):
+    pass
 
 
 def insert_kv(user_prompt, kv_string):
@@ -226,14 +229,16 @@ with gr.Blocks(
                 ],
                 value="anthropic.claude-3-sonnet-20240229-v1:0",
             )
-        evaluate_button = gr.Button("评估prompt")
+        invoke_button = gr.Button("调用prompt")
         with gr.Row():
-            openai_output = gr.Textbox(label="OpenAI 输出", lines=3, interactive=False)
+            openai_output = gr.Textbox(
+                label="OpenAI 输出", lines=3, interactive=False
+            )
             aws_output = gr.Textbox(
                 label="AWS Bedrock 输出", lines=3, interactive=False
             )
-        evaluate_button.click(
-            evaluate_prompt,
+        invoke_button.click(
+            invoke_prompt,
             inputs=[
                 user_prompt_orginal,
                 user_prompt_eval,
@@ -242,9 +247,30 @@ with gr.Blocks(
             ],
             outputs=[openai_output, aws_output],
         )
-        feedback_input = gr.Textbox(
-            label="人工反馈", placeholder="请在此填入您的反馈", lines=3
-        )
+        with gr.Row():
+            with gr.Row():
+                eval_model_dropdown = gr.Dropdown(
+                    label="选择评价模型",
+                    choices=[
+                        "anthropic.claude-3-sonnet-20240229-v1:0",
+                        "gpt-4-turbo-preview",
+                    ],
+                    value="anthropic.claude-3-sonnet-20240229-v1:0",
+                )
+                evaluate_button = gr.Button("自动评估prompt")
+                evaluate_button.click(
+                    evaluate_response,
+                    inputs=[
+                        openai_output,
+                        aws_output,
+                        eval_model_dropdown,
+                    ],
+                    outputs=[openai_output, aws_output],
+                )
+            with gr.Row():
+                feedback_input = gr.Textbox(
+                    label="手动评估prompt", placeholder="请在此填入您的反馈", lines=3
+                )
         revise_button = gr.Button("修正Prompt")
         revised_prompt_output = gr.Textbox(
             label="修正后的Prompt", lines=3, interactive=False
