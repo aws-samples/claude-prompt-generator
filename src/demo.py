@@ -4,6 +4,7 @@ import re
 
 import boto3
 import gradio as gr
+import threading
 from botocore.config import Config
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -117,10 +118,58 @@ def generate_openai_response(prompt, model_id):
     return completion.choices[0].message.content
 
 
+def stream_bedrock_response(prompt, model_id, output_component):
+    message = {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": prompt}
+        ]
+    }
+    messages = [message]
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 4000,
+            "messages": messages,
+            "system": bedrock_default_system,
+        }
+    )
+    response = bedrock_runtime.invoke_model_with_response_stream(modelId=model_id, body=body)
+
+    stream = response.get('body')
+    if stream:
+        for event in stream:
+            chunk = event.get('chunk')
+            if chunk:
+                output = json.loads(chunk.get('bytes').decode())
+                output_component.update(output)
+
+
+def stream_openai_response(prompt, model_id, output_component):
+    stream = client.chat.completions.create(
+        model=model_id,
+        messages=[{"role": "user", "content": prompt}],
+        stream=True,
+    )
+    for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            output_component.update(chunk.choices[0].delta.content, append=True)
+
+
+def invoke_prompt_stream(original_prompt, revised_prompt, openai_model_id, aws_model_id, openai_output_component, aws_output_component):
+    # Start streaming in separate threads to allow concurrent streaming
+    openai_thread = threading.Thread(target=stream_openai_response, args=(original_prompt, openai_model_id, openai_output_component))
+    bedrock_thread = threading.Thread(target=stream_bedrock_response, args=(revised_prompt, aws_model_id, aws_output_component))
+
+    openai_thread.start()
+    bedrock_thread.start()
+
+
 def invoke_prompt(original_prompt, revised_prompt, openai_model_id, aws_model_id):
     openai_result = generate_openai_response(original_prompt, openai_model_id)
     aws_result = generate_bedrock_response(revised_prompt, aws_model_id)
     return openai_result, aws_result
+
 
 def evaluate_response(openai_output, aws_output, eval_model_id):
     pass
@@ -247,6 +296,20 @@ with gr.Blocks(
             ],
             outputs=[openai_output, aws_output],
         )
+        # invoke_button.click(
+        #     invoke_prompt_stream,
+        #     inputs=[
+        #         user_prompt_orginal,
+        #         user_prompt_eval,
+        #         openai_model_dropdown,
+        #         aws_model_dropdown,
+        #         openai_output,
+        #         aws_output,
+        #     ],
+        #     outputs=[]
+        # )
+
+
         with gr.Row():
             with gr.Row():
                 eval_model_dropdown = gr.Dropdown(
