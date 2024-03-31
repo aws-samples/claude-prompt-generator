@@ -1,3 +1,5 @@
+# Claude Prompt Generator
+
 ## Quick Start
 
 Fill your OPENAI_API_KEY, OPENAI_API_URL and REGION_NAME (Note this is refer to AWS region, e.g. us-east-1) in the .env file, following the .env.example file.
