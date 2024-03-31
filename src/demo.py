@@ -366,7 +366,7 @@ with gr.Blocks(
             feedback_input = gr.Textbox(
                 label="评估prompt效果", placeholder="手动填入反馈或自动评估", lines=3, show_copy_button=True
             )
-            with gr.Row():
+            with gr.Column():
                 eval_model_dropdown = gr.Dropdown(
                     label="选择评价模型",
                     # Use Bedrock to evaluate the prompt, sonnet or opus are recommended
