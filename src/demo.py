@@ -27,6 +27,49 @@ default_system = "you have profound knowledge and hands on experience in field o
 bedrock_default_system = default_system
 openai_default_system = default_system
 
+evaluate_response_prompt_template = """
+You are an expert in linguistics and able to observe the most subtle content difference between two paragraph, you will be given responses from OpenAI, Bedrock to observe.
+
+Here are the OpenAI response: 
+<response>
+{_OpenAI}
+</response>
+
+Here are the Bedrock response:
+<response>
+{_Bedrock}
+</response>
+
+
+Your goal is to summarize the difference in detail of Bedrock response compare to OpenAI response, first analyze both response carefully in content accuracy, logical organize method and expression style, then give your recommendation on how the Bedrock reponse could be refactored to align with the OpenAI response, finally give your answer including the difference and recommendation with bullet points <auto_feedback></auto_feedback> tags.
+"""
+
+generate_revised_prompt_template = """
+You are an expert in prompt engineering for both OpenAI and Claude model and able to follow the human feedback to adjust the prompt to attain the optimal effect, you will be given original Claude prompt, responses from OpenAI, Claude and human feedback to revise the Claude prompt.
+
+Here are the user original prompt: 
+<prompt>
+{_prompt}
+</prompt>
+
+Here are the OpenAI response:
+<response>
+{_OpenAI}
+</response>
+
+Here are the Claude response:
+<response>
+{_Bedrock}
+</response>
+
+Here are the human feedback:
+<evaluation_summary>
+{_feedback}
+</evaluation_summary>
+
+Please first analyze whether Claude responsded to original prompts in alignment OpenAI response according to the human feedback, then consider how the user original prompt can be improved accordingly, finally provide the revised prompt in <revised_prompt></revised_prompt> tags.
+"""
+
 
 def generate_prompt(original_prompt, level):
     if level == "一次生成":
@@ -172,8 +215,13 @@ def invoke_prompt(original_prompt, revised_prompt, openai_model_id, aws_model_id
 
 
 def evaluate_response(openai_output, aws_output, eval_model_id):
-    pass
-
+    revised_prompt = evaluate_response_prompt_template.format(_OpenAI=openai_output, _Bedrock=aws_output)
+    aws_result = generate_bedrock_response(revised_prompt, eval_model_id)
+    pattern = r'<auto_feedback>(.*?)</auto_feedback>'
+    matches = re.findall(pattern, aws_result, re.DOTALL)
+    # remove all the \n and []
+    matches = matches[0].replace("\n", "").replace("[", "").replace("]", "")
+    return matches
 
 def insert_kv(user_prompt, kv_string):
     # Split the key-value string by ';' to get individual pairs
@@ -187,10 +235,14 @@ def insert_kv(user_prompt, kv_string):
     return user_prompt
 
 
-def generate_revised_prompt(feedback, prompt, openai_response, aws_response):
-    # Placeholder for generating a revised prompt based on the feedback
-    pass
-
+def generate_revised_prompt(feedback, prompt, openai_response, aws_response, eval_model_id):
+    revised_prompt = generate_revised_prompt_template.format(_feedback=feedback, _prompt=prompt, _OpenAI=openai_response, _Bedrock=aws_output)
+    aws_result = generate_bedrock_response(revised_prompt, eval_model_id)
+    pattern = r'<revised_prompt>(.*?)</revised_prompt>'
+    matches = re.findall(pattern, aws_result, re.DOTALL)
+    # remove all the \n and []
+    matches = matches[0].replace("\n", "").replace("[", "").replace("]", "")
+    return matches
 
 with gr.Blocks(
     title="Automatic Prompt Engineering",
@@ -226,7 +278,7 @@ with gr.Blocks(
         b2.click(ape_prompt, inputs=[original_prompt, user_data], outputs=textboxes)
     with gr.Tab("Prompt 评估"):
         with gr.Row():
-            user_prompt_orginal = gr.Textbox(label="请输入您的原始prompt", lines=3)
+            user_prompt_original = gr.Textbox(label="请输入您的原始prompt", lines=3)
             kv_input = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
@@ -242,8 +294,8 @@ with gr.Blocks(
             insert_button_original = gr.Button("替换原始模版参数")
             insert_button_original.click(
                 insert_kv,
-                inputs=[user_prompt_orginal, kv_input],
-                outputs=user_prompt_orginal,
+                inputs=[user_prompt_original, kv_input],
+                outputs=user_prompt_original,
             )
             insert_button_revise = gr.Button("替换评估模版参数")
             insert_button_revise.click(
@@ -281,15 +333,15 @@ with gr.Blocks(
         invoke_button = gr.Button("调用prompt")
         with gr.Row():
             openai_output = gr.Textbox(
-                label="OpenAI 输出", lines=3, interactive=False
+                label="OpenAI 输出", lines=3, interactive=False, show_copy_button=True
             )
             aws_output = gr.Textbox(
-                label="AWS Bedrock 输出", lines=3, interactive=False
+                label="AWS Bedrock 输出", lines=3, interactive=False, show_copy_button=True
             )
         invoke_button.click(
             invoke_prompt,
             inputs=[
-                user_prompt_orginal,
+                user_prompt_original,
                 user_prompt_eval,
                 openai_model_dropdown,
                 aws_model_dropdown,
@@ -299,7 +351,7 @@ with gr.Blocks(
         # invoke_button.click(
         #     invoke_prompt_stream,
         #     inputs=[
-        #         user_prompt_orginal,
+        #         user_prompt_original,
         #         user_prompt_eval,
         #         openai_model_dropdown,
         #         aws_model_dropdown,
@@ -311,16 +363,20 @@ with gr.Blocks(
 
 
         with gr.Row():
+            feedback_input = gr.Textbox(
+                label="评估prompt效果", placeholder="手动填入反馈或自动评估", lines=3, show_copy_button=True
+            )
             with gr.Row():
                 eval_model_dropdown = gr.Dropdown(
                     label="选择评价模型",
+                    # Use Bedrock to evaluate the prompt, sonnet or opus are recommended
                     choices=[
                         "anthropic.claude-3-sonnet-20240229-v1:0",
-                        "gpt-4-turbo-preview",
+                        # opus placeholder
                     ],
                     value="anthropic.claude-3-sonnet-20240229-v1:0",
                 )
-                evaluate_button = gr.Button("自动评估prompt")
+                evaluate_button = gr.Button("自动评估prompt效果")
                 evaluate_button.click(
                     evaluate_response,
                     inputs=[
@@ -328,11 +384,7 @@ with gr.Blocks(
                         aws_output,
                         eval_model_dropdown,
                     ],
-                    outputs=[openai_output, aws_output],
-                )
-            with gr.Row():
-                feedback_input = gr.Textbox(
-                    label="手动评估prompt", placeholder="请在此填入您的反馈", lines=3
+                    outputs=[feedback_input],
                 )
         revise_button = gr.Button("修正Prompt")
         revised_prompt_output = gr.Textbox(
@@ -340,7 +392,7 @@ with gr.Blocks(
         )
         revise_button.click(
             generate_revised_prompt,
-            inputs=[feedback_input, user_prompt_eval, openai_output, aws_output],
+            inputs=[feedback_input, user_prompt_eval, openai_output, aws_output, eval_model_dropdown],
             outputs=revised_prompt_output,
         )
 
