@@ -306,7 +306,7 @@ with gr.Blocks(
             openai_model_dropdown = gr.Dropdown(
                 label="选择 OpenAI 模型",
                 choices=[
-                    "gpt-3.5-turbo"
+                    "gpt-3.5-turbo",
                     "gpt-3.5-turbo-1106",
                     "gpt-4-32k",
                     "gpt-4-1106-preview",
