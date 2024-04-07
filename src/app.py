@@ -242,7 +242,7 @@ def generate_revised_prompt(feedback, prompt, openai_response, aws_response, eva
     pattern = r'<revised_prompt>(.*?)</revised_prompt>'
     matches = re.findall(pattern, aws_result, re.DOTALL)
     # remove all the \n and []
-    matches = matches[0].replace("\n", "").replace("[", "").replace("]", "")
+    matches = matches[0]#.replace("\n", "").replace("[", "").replace("]", "")
     return matches
 
 with gr.Blocks(
@@ -280,13 +280,13 @@ with gr.Blocks(
     with gr.Tab("Prompt 评估"):
         with gr.Row():
             user_prompt_original = gr.Textbox(label="请输入您的原始prompt", lines=3)
-            kv_input = gr.Textbox(
+            kv_input_original = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
                 lines=2,
             )
             user_prompt_eval = gr.Textbox(label="请输入您要评估的prompt", lines=3)
-            kv_input = gr.Textbox(
+            kv_input_eval = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
                 lines=2,
@@ -295,12 +295,12 @@ with gr.Blocks(
             insert_button_original = gr.Button("替换原始模版参数")
             insert_button_original.click(
                 insert_kv,
-                inputs=[user_prompt_original, kv_input],
+                inputs=[user_prompt_original, kv_input_original],
                 outputs=user_prompt_original,
             )
             insert_button_revise = gr.Button("替换评估模版参数")
             insert_button_revise.click(
-                insert_kv, inputs=[user_prompt_eval, kv_input], outputs=user_prompt_eval
+                insert_kv, inputs=[user_prompt_eval, kv_input_eval], outputs=user_prompt_eval
             )
         with gr.Row():
             # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
@@ -308,6 +308,7 @@ with gr.Blocks(
                 label="选择 OpenAI 模型",
                 choices=[
                     "gpt-3.5-turbo",
+                    "gpt-3.5-turbo-1106",
                     "gpt-4-32k",
                     "gpt-4-1106-preview",
                     "gpt-4-turbo-preview",
