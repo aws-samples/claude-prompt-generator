@@ -23,7 +23,8 @@ bedrock_runtime = boto3.client(
 )
 client = OpenAI()
 
-default_system = "you have profound knowledge and hands on experience in field of software engineering and artificial intelligence, you are also an experienced solution architect in Amazon Web Service and have expertise to impelment model application development with AWS in consdieration of well architect and industry best practice."
+# default_system = "you have profound knowledge and hands on experience in field of software engineering and artificial intelligence, you are also an experienced solution architect in Amazon Web Service and have expertise to impelment model application development with AWS in consdieration of well architect and industry best practice."
+default_system = "You are a helpful and knowledgeable assistant who is able to provide detailed and accurate information on a wide range of topics. You are also able to provide clear and concise answers to questions and are always willing to go the extra mile to help others."
 bedrock_default_system = default_system
 openai_default_system = default_system
 
@@ -45,9 +46,9 @@ Your goal is to summarize the difference in detail of Bedrock response compare t
 """
 
 generate_revised_prompt_template = """
-You are an expert in prompt engineering for both OpenAI and Claude model and able to follow the human feedback to adjust the prompt to attain the optimal effect, you will be given original Claude prompt, responses from OpenAI, Claude and human feedback to revise the Claude prompt.
+You are an expert in prompt engineering for both OpenAI and Claude model and able to follow the human feedback to adjust the prompt to attain the optimal effect, you will be given the original Claude prompt, responses from OpenAI, responses from Claude and human feedback to revise the Claude prompt.
 
-Here are the user original prompt: 
+Here are the original Claude prompt: 
 <prompt>
 {_prompt}
 </prompt>
@@ -67,7 +68,7 @@ Here are the human feedback:
 {_feedback}
 </evaluation_summary>
 
-Please first analyze whether Claude responsded to original prompts in alignment OpenAI response according to the human feedback, then consider how the user original prompt can be improved accordingly, finally provide the revised prompt in <revised_prompt></revised_prompt> tags.
+Please first analyze whether Claude response is strictly aligned with OpenAI response according to the human feedback, then consider how the orginal Claude prompt can be improved accordingly, the revised prompt MUST NOT be drastically changed from the original prompt, only slight adjustment is allowed, use the human feedback to guide your revision, finally provide the revised prompt in <revised_prompt></revised_prompt> tags. 
 """
 
 
