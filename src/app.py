@@ -29,21 +29,25 @@ bedrock_default_system = default_system
 openai_default_system = default_system
 
 evaluate_response_prompt_template = """
-You are an expert in linguistics and able to observe the most subtle content difference between two paragraph, you will be given responses from OpenAI, Bedrock to observe.
+You are an expert in linguistics and able to observe subtle differences in content between two paragraphs. Your task is to analyze responses from OpenAI and Claude and provide detailed feedback.
 
 Here are the OpenAI response: 
 <response>
 {_OpenAI}
 </response>
 
-Here are the Bedrock response:
+Here are the Claude response:
 <response>
 {_Bedrock}
 </response>
 
-
-Your goal is to summarize the difference in detail of Bedrock response compare to OpenAI response, first analyze both response carefully in content accuracy, logical organize method and expression style, then give your recommendation on how the Bedrock reponse could be refactored to align with the OpenAI response, finally give your answer including the difference and recommendation with bullet points <auto_feedback></auto_feedback> tags.
-"""
+Please follow these steps:
+1. Carefully analyze both responses in terms of content accuracy, logical organization, and expression style.
+2. Summarize the differences between the Claude response and the OpenAI response.
+3. Provide recommendations on how the Claude response could be refactored to better align with the OpenAI response.
+4. Encapsulate your analysis, including the differences, within <auto_feedback></auto_feedback> tags using bullet points.
+5. Encapsulate recommendations, within <recommendation></recommendation> tags using bullet points.
+""".strip()
 
 generate_revised_prompt_template = """
 You are an expert in prompt engineering for both OpenAI and Claude model and able to follow the human feedback to adjust the prompt to attain the optimal effect, you will be given the original Claude prompt, responses from OpenAI, responses from Claude and human feedback to revise the Claude prompt.
@@ -68,8 +72,14 @@ Here are the human feedback:
 {_feedback}
 </evaluation_summary>
 
-Please first analyze whether Claude response is strictly aligned with OpenAI response according to the human feedback, then consider how the orginal Claude prompt can be improved accordingly, the revised prompt MUST NOT be drastically changed from the original prompt, only slight adjustment is allowed, use the human feedback to guide your revision, finally provide the revised prompt in <revised_prompt></revised_prompt> tags. 
-"""
+Please analyze whether Claude's response strictly aligns with OpenAI's response based on the human feedback. Then, consider how the original Claude prompt can be improved accordingly. Your revised prompt should only involve slight adjustments and must not drastically change the original prompt. Use the human feedback to guide your revision.
+
+Finally, provide the revised prompt within the following XML tags:
+
+<revised_prompt>
+[Your revised prompt]
+</revised_prompt>
+""".strip()
 
 
 def generate_prompt(original_prompt, level):
@@ -219,10 +229,14 @@ def evaluate_response(openai_output, aws_output, eval_model_id):
     revised_prompt = evaluate_response_prompt_template.format(_OpenAI=openai_output, _Bedrock=aws_output)
     aws_result = generate_bedrock_response(revised_prompt, eval_model_id)
     pattern = r'<auto_feedback>(.*?)</auto_feedback>'
-    matches = re.findall(pattern, aws_result, re.DOTALL)
+    feedback = re.findall(pattern, aws_result, re.DOTALL)[0]
+
+    pattern = r'<recommendation>(.*?)</recommendation>'
+    recommendation = re.findall(pattern, aws_result, re.DOTALL)[0]
+
     # remove all the \n and []
-    matches = matches[0].replace("\n", "").replace("[", "").replace("]", "")
-    return matches
+    #matches = matches[0]#.replace("\n", "").replace("[", "").replace("]", "")
+    return feedback + f'\n<recommendation>{recommendation}</recommendation>'
 
 def insert_kv(user_prompt, kv_string):
     # Split the key-value string by ';' to get individual pairs
@@ -230,20 +244,24 @@ def insert_kv(user_prompt, kv_string):
     for pair in kv_pairs:
         if ":" in pair:
             key, value = pair.split(":", 1)  # Only split on the first ':'
-            user_prompt = user_prompt.replace(f"{{{key}}}", value).replace(
-                f"<{key}>", value
-            )
+            user_prompt = user_prompt.replace(f"{{{key}}}", value)#.replace(
+            #    f"<{key}>", value
+            #)
     return user_prompt
 
 
 def generate_revised_prompt(feedback, prompt, openai_response, aws_response, eval_model_id):
+    pattern = r'<recommendation>(.*?)</recommendation>'
+    matches = re.findall(pattern, feedback, re.DOTALL)
+    if len(matches):
+        feedback = matches[0]
     revised_prompt = generate_revised_prompt_template.format(_feedback=feedback, _prompt=prompt, _OpenAI=openai_response, _Bedrock=aws_output)
     aws_result = generate_bedrock_response(revised_prompt, eval_model_id)
     pattern = r'<revised_prompt>(.*?)</revised_prompt>'
     matches = re.findall(pattern, aws_result, re.DOTALL)
     # remove all the \n and []
     matches = matches[0]#.replace("\n", "").replace("[", "").replace("]", "")
-    return matches
+    return matches.strip()
 
 with gr.Blocks(
     title="Automatic Prompt Engineering",
@@ -261,8 +279,8 @@ with gr.Blocks(
                 )
                 b1 = gr.Button("优化prompt")
             with gr.Column(scale=2):
-                user_data = gr.Textbox(label="测试数据JSON", lines=2)
-                b2 = gr.Button("APE优化prompt")
+                user_data = gr.Textbox(label="测试数据JSON[Deprecated]", lines=2, interactive=False)
+                b2 = gr.Button("APE优化prompt[Deprecated]")
         textboxes = []
         for i in range(3):
             t = gr.Textbox(
@@ -276,16 +294,18 @@ with gr.Blocks(
             textboxes.append(t)
         log = gr.Markdown("")
         b1.click(generate_prompt, inputs=[original_prompt, level], outputs=textboxes)
-        b2.click(ape_prompt, inputs=[original_prompt, user_data], outputs=textboxes)
+        #b2.click(ape_prompt, inputs=[original_prompt, user_data], outputs=textboxes)
     with gr.Tab("Prompt 评估"):
         with gr.Row():
             user_prompt_original = gr.Textbox(label="请输入您的原始prompt", lines=3)
+            user_prompt_original_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
             kv_input_original = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
                 lines=2,
             )
             user_prompt_eval = gr.Textbox(label="请输入您要评估的prompt", lines=3)
+            user_prompt_eval_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
             kv_input_eval = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
@@ -296,11 +316,11 @@ with gr.Blocks(
             insert_button_original.click(
                 insert_kv,
                 inputs=[user_prompt_original, kv_input_original],
-                outputs=user_prompt_original,
+                outputs=user_prompt_original_replaced,
             )
             insert_button_revise = gr.Button("替换评估模版参数")
             insert_button_revise.click(
-                insert_kv, inputs=[user_prompt_eval, kv_input_eval], outputs=user_prompt_eval
+                insert_kv, inputs=[user_prompt_eval, kv_input_eval], outputs=user_prompt_eval_replaced
             )
         with gr.Row():
             # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
@@ -330,7 +350,7 @@ with gr.Blocks(
                     "anthropic.claude-3-sonnet-20240229-v1:0",
                     "anthropic.claude-3-haiku-20240307-v1:0",
                 ],
-                value="anthropic.claude-3-sonnet-20240229-v1:0",
+                value="anthropic.claude-3-haiku-20240307-v1:0",
             )
         invoke_button = gr.Button("调用prompt")
         with gr.Row():
@@ -343,8 +363,8 @@ with gr.Blocks(
         invoke_button.click(
             invoke_prompt,
             inputs=[
-                user_prompt_original,
-                user_prompt_eval,
+                user_prompt_original_replaced,
+                user_prompt_eval_replaced,
                 openai_model_dropdown,
                 aws_model_dropdown,
             ],
