@@ -219,9 +219,13 @@ def invoke_prompt_stream(original_prompt, revised_prompt, openai_model_id, aws_m
     bedrock_thread.start()
 
 
-def invoke_prompt(original_prompt, revised_prompt, openai_model_id, aws_model_id):
-    openai_result = generate_openai_response(original_prompt, openai_model_id)
-    aws_result = generate_bedrock_response(revised_prompt, aws_model_id)
+def invoke_prompt(original_prompt_replace, revised_prompt_replace, original_prompt, revised_prompt, openai_model_id, aws_model_id):
+    if len(original_prompt_replace) == 0:
+        original_prompt_replace = original_prompt
+    if len(revised_prompt_replace) == 0:
+        revised_prompt_replace = revised_prompt
+    openai_result = generate_openai_response(original_prompt_replace, openai_model_id)
+    aws_result = generate_bedrock_response(revised_prompt_replace, aws_model_id)
     return openai_result, aws_result
 
 
@@ -298,19 +302,20 @@ with gr.Blocks(
     with gr.Tab("Prompt 评估"):
         with gr.Row():
             user_prompt_original = gr.Textbox(label="请输入您的原始prompt", lines=3)
-            user_prompt_original_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
             kv_input_original = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
-                lines=2,
+                lines=3,
             )
+            user_prompt_original_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
+
             user_prompt_eval = gr.Textbox(label="请输入您要评估的prompt", lines=3)
-            user_prompt_eval_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
             kv_input_eval = gr.Textbox(
                 label="[可选]输入需要替换的模版参数",
                 placeholder="参考格式: key1:value1;key2:value2",
-                lines=2,
+                lines=3,
             )
+            user_prompt_eval_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
         with gr.Row():
             insert_button_original = gr.Button("替换原始模版参数")
             insert_button_original.click(
@@ -365,6 +370,8 @@ with gr.Blocks(
             inputs=[
                 user_prompt_original_replaced,
                 user_prompt_eval_replaced,
+                user_prompt_original,
+                user_prompt_eval,
                 openai_model_dropdown,
                 aws_model_dropdown,
             ],
@@ -410,7 +417,7 @@ with gr.Blocks(
                 )
         revise_button = gr.Button("修正Prompt")
         revised_prompt_output = gr.Textbox(
-            label="修正后的Prompt", lines=3, interactive=False
+            label="修正后的Prompt", lines=3, interactive=False, show_copy_button=True
         )
         revise_button.click(
             generate_revised_prompt,
