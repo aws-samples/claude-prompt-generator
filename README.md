@@ -1,5 +1,9 @@
 # Claude Prompt Generator
 
+## Overall Workflow
+For user not using any language model, initial prompt is generated from scratch according to Claude3 prompt guidance; For user already use language model (GPT), initial prompt is "translated" into Claude3 prompt including the transformation based on the prompt nuances between difference model characters, e.g. XML tag are recommended in Claude3. Once the initial prompt is generated, the auto & manual evaluation process are involved to gurantee the output effectivenss or alignment and revised prompt will be generated accordingly, user will keep iterating the process until the desired output is achieved. The final process will involve the manual adjustment to ensure the production ready quality, which can't be fully implemented by script or model as described as the 10% human-in-the-loop process.
+![image](https://github.com/aws-samples/claude-prompt-generator/assets/23544182/4ae1612a-c389-4c1f-8f4e-e9fe3d0f12d1)
+
 ## Quick Start
 
 **Pre-requisite**
