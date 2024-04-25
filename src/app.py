@@ -83,11 +83,11 @@ Finally, provide the revised prompt within the following XML tags:
 
 
 def generate_prompt(original_prompt, level):
-    if level == "一次生成":
+    if level == "One-time Generation":
         result = rewrite(original_prompt)  # , cost
         return [
             gr.Textbox(
-                label="我们为您生成的prompt",
+                label="Prompt Generated",
                 value=result,
                 lines=3,
                 show_copy_button=True,
@@ -95,7 +95,7 @@ def generate_prompt(original_prompt, level):
             )
         ] + [gr.Textbox(visible=False)] * 2
 
-    elif level == "多次生成":
+    elif level == "Multiple-time Generation":
         candidates = []
         for i in range(3):
             result = rewrite(original_prompt)
@@ -106,7 +106,7 @@ def generate_prompt(original_prompt, level):
             is_best = "Y" if judge_result == i else "N"
             textboxes.append(
                 gr.Textbox(
-                    label=f"我们为您生成的prompt #{i+1} {is_best}",
+                    label=f"Prompt Generated #{i+1} {is_best}",
                     value=candidates[i],
                     lines=3,
                     show_copy_button=True,
@@ -121,7 +121,7 @@ def ape_prompt(original_prompt, user_data):
     result = ape(initial_prompt, 1, json.loads(user_data))
     return [
         gr.Textbox(
-            label="我们为您生成的prompt",
+            label="Prompt Generated",
             value=result["prompt"],
             lines=3,
             show_copy_button=True,
@@ -272,23 +272,23 @@ with gr.Blocks(
     theme="soft",
     css="#textbox_id textarea {color: red}",
 ) as demo:
-    with gr.Tab("Prompt 生成"):
+    with gr.Tab("Generate Prompt"):
         gr.Markdown("# Automatic Prompt Engineering")
-        original_prompt = gr.Textbox(label="请输入您的原始prompt", lines=3)
-        gr.Markdown("其中用户自定义变量使用{\{xxx\}}表示，例如{\{document\}}")
+        original_prompt = gr.Textbox(label="Please input your original prompt", lines=3)
+        gr.Markdown("Use {\{xxx\}} to express custom variable, e.g. {\{document\}}")
         with gr.Row():
             with gr.Column(scale=2):
                 level = gr.Radio(
-                    ["一次生成", "多次生成"], label="优化等级", value="一次生成"
+                    ["One-time Generation", "Multiple-time Generation"], label="Optimize Level", value="One-time Generation"
                 )
-                b1 = gr.Button("优化prompt")
+                b1 = gr.Button("Revise Prompt")
             with gr.Column(scale=2):
-                user_data = gr.Textbox(label="测试数据JSON[Deprecated]", lines=2, interactive=False)
-                b2 = gr.Button("APE优化prompt[Deprecated]")
+                user_data = gr.Textbox(label="Test data JSON[Deprecated]", lines=2, interactive=False)
+                b2 = gr.Button("APE optimze prompt[Deprecated]")
         textboxes = []
         for i in range(3):
             t = gr.Textbox(
-                label="我们为您生成的prompt",
+                label="Prompt Generated",
                 elem_id="textbox_id",
                 lines=3,
                 show_copy_button=True,
@@ -299,38 +299,38 @@ with gr.Blocks(
         log = gr.Markdown("")
         b1.click(generate_prompt, inputs=[original_prompt, level], outputs=textboxes)
         #b2.click(ape_prompt, inputs=[original_prompt, user_data], outputs=textboxes)
-    with gr.Tab("Prompt 评估"):
+    with gr.Tab("Prompt Evaluation"):
         with gr.Row():
-            user_prompt_original = gr.Textbox(label="请输入您的原始prompt", lines=3)
+            user_prompt_original = gr.Textbox(label="Please input your original prompt", lines=3)
             kv_input_original = gr.Textbox(
-                label="[可选]输入需要替换的模版参数",
-                placeholder="参考格式: key1:value1;key2:value2",
+                label="[Optional]Input the template variable need to be replaced",
+                placeholder="Ref format: key1:value1;key2:value2",
                 lines=3,
             )
-            user_prompt_original_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
+            user_prompt_original_replaced = gr.Textbox(label="Replace Result", lines=3, interactive=False)
 
-            user_prompt_eval = gr.Textbox(label="请输入您要评估的prompt", lines=3)
+            user_prompt_eval = gr.Textbox(label="Please input the prompt need to be evaluate", lines=3)
             kv_input_eval = gr.Textbox(
-                label="[可选]输入需要替换的模版参数",
-                placeholder="参考格式: key1:value1;key2:value2",
+                label="[Optional]Input the template variable need to be replaced",
+                placeholder="Ref format: key1:value1;key2:value2",
                 lines=3,
             )
-            user_prompt_eval_replaced = gr.Textbox(label="替换结果", lines=3, interactive=False)
+            user_prompt_eval_replaced = gr.Textbox(label="Replace Result", lines=3, interactive=False)
         with gr.Row():
-            insert_button_original = gr.Button("替换原始模版参数")
+            insert_button_original = gr.Button("Replace Variables in Original Prompt")
             insert_button_original.click(
                 insert_kv,
                 inputs=[user_prompt_original, kv_input_original],
                 outputs=user_prompt_original_replaced,
             )
-            insert_button_revise = gr.Button("替换评估模版参数")
+            insert_button_revise = gr.Button("Replace Variables in Revised Prompt")
             insert_button_revise.click(
                 insert_kv, inputs=[user_prompt_eval, kv_input_eval], outputs=user_prompt_eval_replaced
             )
         with gr.Row():
             # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
             openai_model_dropdown = gr.Dropdown(
-                label="选择 OpenAI 模型",
+                label="Choose OpenAI Model",
                 choices=[
                     "gpt-3.5-turbo",
                     "gpt-3.5-turbo-1106",
@@ -342,7 +342,7 @@ with gr.Blocks(
             )
             # aws bedrock list-foundation-models --region us-east-1 --output json | jq -r '.modelSummaries[].modelId'
             aws_model_dropdown = gr.Dropdown(
-                label="选择 AWS 模型",
+                label="Choose AWS Model",
                 choices=[
                     "anthropic.claude-instant-v1:2:100k",
                     "anthropic.claude-instant-v1",
@@ -357,13 +357,13 @@ with gr.Blocks(
                 ],
                 value="anthropic.claude-3-haiku-20240307-v1:0",
             )
-        invoke_button = gr.Button("调用prompt")
+        invoke_button = gr.Button("Execute prompt")
         with gr.Row():
             openai_output = gr.Textbox(
-                label="OpenAI 输出", lines=3, interactive=False, show_copy_button=True
+                label="OpenAI Output", lines=3, interactive=False, show_copy_button=True
             )
             aws_output = gr.Textbox(
-                label="AWS Bedrock 输出", lines=3, interactive=False, show_copy_button=True
+                label="AWS Bedrock Output", lines=3, interactive=False, show_copy_button=True
             )
         invoke_button.click(
             invoke_prompt,
@@ -393,11 +393,11 @@ with gr.Blocks(
 
         with gr.Row():
             feedback_input = gr.Textbox(
-                label="评估prompt效果", placeholder="手动填入反馈或自动评估", lines=3, show_copy_button=True
+                label="Evaluate the Prompt Effect", placeholder="Input your feedback manually or by model", lines=3, show_copy_button=True
             )
             with gr.Column():
                 eval_model_dropdown = gr.Dropdown(
-                    label="选择评价模型",
+                    label="Choose the Evaluation Model",
                     # Use Bedrock to evaluate the prompt, sonnet or opus are recommended
                     choices=[
                         "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -405,7 +405,7 @@ with gr.Blocks(
                     ],
                     value="anthropic.claude-3-sonnet-20240229-v1:0",
                 )
-                evaluate_button = gr.Button("自动评估prompt效果")
+                evaluate_button = gr.Button("Auto-evaluate the Prompt Effect")
                 evaluate_button.click(
                     evaluate_response,
                     inputs=[
@@ -415,9 +415,9 @@ with gr.Blocks(
                     ],
                     outputs=[feedback_input],
                 )
-        revise_button = gr.Button("修正Prompt")
+        revise_button = gr.Button("Iterate the Prompt")
         revised_prompt_output = gr.Textbox(
-            label="修正后的Prompt", lines=3, interactive=False, show_copy_button=True
+            label="Revised Prompt", lines=3, interactive=False, show_copy_button=True
         )
         revise_button.click(
             generate_revised_prompt,
