@@ -1,17 +1,17 @@
 import json
 import os
 import re
+import threading
 
 import gradio as gr
-import threading
 from dotenv import load_dotenv
 
-
 from ape import APE
-from translate import GuideBased
-from optimize import Alignment
 from metaprompt import MetaPrompt
-#ape = APE()
+from optimize import Alignment
+from translate import GuideBased
+
+# ape = APE()
 rewrite = GuideBased()
 alignment = Alignment()
 metaprompt = MetaPrompt()
@@ -73,14 +73,52 @@ with gr.Blocks(
     css="#textbox_id textarea {color: red}",
 ) as demo:
     gr.Markdown("# Automatic Prompt Engineering")
+
+    with gr.Tab("Meta Prompt"):
+        original_task = gr.Textbox(
+            label="Task",
+            lines=3,
+            info="Please input your task",
+            placeholder="Draft an email responding to a customer complaint",
+        )
+        variables = gr.Textbox(
+            label="Variables",
+            info="Please input your variables, one variable per line",
+            lines=5,
+            placeholder="CUSTOMER_COMPLAINT\nCOMPANY_NAME",
+        )
+        metaprompt_button = gr.Button("Generate Prompt")
+        prompt_result = gr.Textbox(
+            label="Prompt Template Generated",
+            lines=3,
+            show_copy_button=True,
+            interactive=False,
+        )
+        variables_result = gr.Textbox(
+            label="Variables Generated",
+            lines=3,
+            show_copy_button=True,
+            interactive=False,
+        )
+        metaprompt_button.click(
+            metaprompt,
+            inputs=[original_task, variables],
+            outputs=[prompt_result, variables_result],
+        )
+
     with gr.Tab("Generate Prompt"):
-        
-        original_prompt = gr.Textbox(label="Please input your original prompt", lines=3, placeholder='Summarize the text delimited by triple quotes.\n\n"""{{insert text here}}"""')
+        original_prompt = gr.Textbox(
+            label="Please input your original prompt",
+            lines=3,
+            placeholder='Summarize the text delimited by triple quotes.\n\n"""{{insert text here}}"""',
+        )
         gr.Markdown("Use {\{xxx\}} to express custom variable, e.g. {\{document\}}")
         with gr.Row():
             with gr.Column(scale=2):
                 level = gr.Radio(
-                    ["One-time Generation", "Multiple-time Generation"], label="Optimize Level", value="One-time Generation"
+                    ["One-time Generation", "Multiple-time Generation"],
+                    label="Optimize Level",
+                    value="One-time Generation",
                 )
                 b1 = gr.Button("Revise Prompt")
             # with gr.Column(scale=2):
@@ -100,46 +138,31 @@ with gr.Blocks(
         log = gr.Markdown("")
         b1.click(generate_prompt, inputs=[original_prompt, level], outputs=textboxes)
 
-    with gr.Tab("Meta Prompt"):
-        original_task = gr.Textbox(label="Task",
-                                   lines=3,
-                                   info="Please input your task",
-                                   placeholder = 'Draft an email responding to a customer complaint'
-                                   )
-        variables = gr.Textbox(label="Variables", info="Please input your variables, one variable per line", lines=5, placeholder='CUSTOMER_COMPLAINT\nCOMPANY_NAME')
-        metaprompt_button = gr.Button("Generate Prompt")
-        prompt_result = gr.Textbox(
-                label="Prompt Template Generated",
-                lines=3,
-                show_copy_button=True,
-                interactive=False
-            )
-        variables_result = gr.Textbox(
-                label="Variables Generated",
-                lines=3,
-                show_copy_button=True,
-                interactive=False
-            )
-        metaprompt_button.click(
-                metaprompt, inputs=[original_task, variables], outputs=[prompt_result, variables_result]
-            )
     with gr.Tab("Prompt Evaluation"):
         with gr.Row():
-            user_prompt_original = gr.Textbox(label="Please input your original prompt", lines=3)
+            user_prompt_original = gr.Textbox(
+                label="Please input your original prompt", lines=3
+            )
             kv_input_original = gr.Textbox(
                 label="[Optional]Input the template variable need to be replaced",
                 placeholder="Ref format: key1:value1;key2:value2",
                 lines=3,
             )
-            user_prompt_original_replaced = gr.Textbox(label="Replace Result", lines=3, interactive=False)
+            user_prompt_original_replaced = gr.Textbox(
+                label="Replace Result", lines=3, interactive=False
+            )
 
-            user_prompt_eval = gr.Textbox(label="Please input the prompt need to be evaluate", lines=3)
+            user_prompt_eval = gr.Textbox(
+                label="Please input the prompt need to be evaluate", lines=3
+            )
             kv_input_eval = gr.Textbox(
                 label="[Optional]Input the template variable need to be replaced",
                 placeholder="Ref format: key1:value1;key2:value2",
                 lines=3,
             )
-            user_prompt_eval_replaced = gr.Textbox(label="Replace Result", lines=3, interactive=False)
+            user_prompt_eval_replaced = gr.Textbox(
+                label="Replace Result", lines=3, interactive=False
+            )
         with gr.Row():
             insert_button_original = gr.Button("Replace Variables in Original Prompt")
             insert_button_original.click(
@@ -149,7 +172,9 @@ with gr.Blocks(
             )
             insert_button_revise = gr.Button("Replace Variables in Revised Prompt")
             insert_button_revise.click(
-                alignment.insert_kv, inputs=[user_prompt_eval, kv_input_eval], outputs=user_prompt_eval_replaced
+                alignment.insert_kv,
+                inputs=[user_prompt_eval, kv_input_eval],
+                outputs=user_prompt_eval_replaced,
             )
         with gr.Row():
             # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
@@ -188,7 +213,10 @@ with gr.Blocks(
                 label="OpenAI Output", lines=3, interactive=False, show_copy_button=True
             )
             aws_output = gr.Textbox(
-                label="AWS Bedrock Output", lines=3, interactive=False, show_copy_button=True
+                label="AWS Bedrock Output",
+                lines=3,
+                interactive=False,
+                show_copy_button=True,
             )
         invoke_button.click(
             alignment.invoke_prompt,
@@ -215,10 +243,12 @@ with gr.Blocks(
         #     outputs=[]
         # )
 
-
         with gr.Row():
             feedback_input = gr.Textbox(
-                label="Evaluate the Prompt Effect", placeholder="Input your feedback manually or by model", lines=3, show_copy_button=True
+                label="Evaluate the Prompt Effect",
+                placeholder="Input your feedback manually or by model",
+                lines=3,
+                show_copy_button=True,
             )
             with gr.Column():
                 eval_model_dropdown = gr.Dropdown(
@@ -246,7 +276,13 @@ with gr.Blocks(
         )
         revise_button.click(
             alignment.generate_revised_prompt,
-            inputs=[feedback_input, user_prompt_eval, openai_output, aws_output, eval_model_dropdown],
+            inputs=[
+                feedback_input,
+                user_prompt_eval,
+                openai_output,
+                aws_output,
+                eval_model_dropdown,
+            ],
             outputs=revised_prompt_output,
         )
 

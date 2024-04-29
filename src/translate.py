@@ -14,10 +14,11 @@ current_script_path = os.path.dirname(os.path.abspath(__file__))
 prompt_guide_path = os.path.join(current_script_path, "PromptGuide.md")
 
 # Open the file using the full path
-with open(prompt_guide_path, 'r') as f:
+with open(prompt_guide_path, "r") as f:
     PromptGuide = f.read()
 
 region_name = os.getenv("REGION_NAME")
+
 
 class GuideBased:
     def __init__(self):

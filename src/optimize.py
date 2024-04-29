@@ -1,9 +1,14 @@
+import json
+import os
+import re
+
 import boto3
 from botocore.config import Config
-import os
 from openai import OpenAI
-import json
-import re
+from dotenv import load_dotenv
+
+load_dotenv()
+
 default_system = "You are a helpful and knowledgeable assistant who is able to provide detailed and accurate information on a wide range of topics. You are also able to provide clear and concise answers to questions and are always willing to go the extra mile to help others."
 bedrock_default_system = default_system
 openai_default_system = default_system
@@ -61,19 +66,24 @@ Finally, provide the revised prompt within the following XML tags:
 </revised_prompt>
 """.strip()
 
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_base_url = os.getenv("OPENAI_BASE_URL")
+
 class Alignment:
     def __init__(self):
         self.bedrock_client = boto3.client(
             service_name="bedrock-runtime", region_name=os.getenv("REGION_NAME")
         )
         try:
-            self.openai_client = OpenAI(base_url = 'https://api.keya.pw/v1',
+            self.openai_client = OpenAI(
+                base_url=openai_base_url,
                 # This is the default and can be omitted
-                api_key='sk-l7Fg7ill5fJEFByE44D55a4cD7874d799cB7B0A10fE4B0Cc'
-                )
-            #self.openai_client = OpenAI()
+                api_key=openai_api_key,
+            )
+            # self.openai_client = OpenAI()
         except:
             self.openai_client = None
+
     def generate_bedrock_response(self, prompt, model_id):
         """
         This function generates a test dataset by invoking a model with a given prompt.
@@ -104,7 +114,6 @@ class Alignment:
         response_body = json.loads(response.get("body").read())
         return response_body["content"][0]["text"]
 
-
     def generate_openai_response(self, prompt, model_id):
         completion = self.openai_client.chat.completions.create(
             model=model_id,
@@ -115,14 +124,8 @@ class Alignment:
         )
         return completion.choices[0].message.content
 
-
     def stream_bedrock_response(self, prompt, model_id, output_component):
-        message = {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt}
-            ]
-        }
+        message = {"role": "user", "content": [{"type": "text", "text": prompt}]}
         messages = [message]
         body = json.dumps(
             {
@@ -132,16 +135,17 @@ class Alignment:
                 "system": bedrock_default_system,
             }
         )
-        response = self.bedrock_client.invoke_model_with_response_stream(modelId=model_id, body=body)
+        response = self.bedrock_client.invoke_model_with_response_stream(
+            modelId=model_id, body=body
+        )
 
-        stream = response.get('body')
+        stream = response.get("body")
         if stream:
             for event in stream:
-                chunk = event.get('chunk')
+                chunk = event.get("chunk")
                 if chunk:
-                    output = json.loads(chunk.get('bytes').decode())
+                    output = json.loads(chunk.get("bytes").decode())
                     output_component.update(output)
-
 
     def stream_openai_response(self, prompt, model_id, output_component):
         stream = self.openai_client.chat.completions.create(
@@ -153,32 +157,45 @@ class Alignment:
             if chunk.choices[0].delta.content is not None:
                 output_component.update(chunk.choices[0].delta.content, append=True)
 
-    def invoke_prompt(self, original_prompt_replace, revised_prompt_replace, original_prompt, revised_prompt, openai_model_id, aws_model_id):
+    def invoke_prompt(
+        self,
+        original_prompt_replace,
+        revised_prompt_replace,
+        original_prompt,
+        revised_prompt,
+        openai_model_id,
+        aws_model_id,
+    ):
         if len(original_prompt_replace) == 0:
             original_prompt_replace = original_prompt
         if len(revised_prompt_replace) == 0:
             revised_prompt_replace = revised_prompt
         if self.openai_client is None:
-            openai_result = 'OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable'
-            aws_result = 'OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable'
+            openai_result = "OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable"
+            aws_result = "OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable"
             return openai_result, aws_result
-        openai_result = self.generate_openai_response(original_prompt_replace, openai_model_id)
-        aws_result = self.generate_bedrock_response(revised_prompt_replace, aws_model_id)
+        openai_result = self.generate_openai_response(
+            original_prompt_replace, openai_model_id
+        )
+        aws_result = self.generate_bedrock_response(
+            revised_prompt_replace, aws_model_id
+        )
         return openai_result, aws_result
 
-
     def evaluate_response(self, openai_output, aws_output, eval_model_id):
-        revised_prompt = evaluate_response_prompt_template.format(_OpenAI=openai_output, _Bedrock=aws_output)
+        revised_prompt = evaluate_response_prompt_template.format(
+            _OpenAI=openai_output, _Bedrock=aws_output
+        )
         aws_result = self.generate_bedrock_response(revised_prompt, eval_model_id)
-        pattern = r'<auto_feedback>(.*?)</auto_feedback>'
+        pattern = r"<auto_feedback>(.*?)</auto_feedback>"
         feedback = re.findall(pattern, aws_result, re.DOTALL)[0]
 
-        pattern = r'<recommendation>(.*?)</recommendation>'
+        pattern = r"<recommendation>(.*?)</recommendation>"
         recommendation = re.findall(pattern, aws_result, re.DOTALL)[0]
 
         # remove all the \n and []
-        #matches = matches[0]#.replace("\n", "").replace("[", "").replace("]", "")
-        return feedback + f'\n<recommendation>{recommendation}</recommendation>'
+        # matches = matches[0]#.replace("\n", "").replace("[", "").replace("]", "")
+        return feedback + f"\n<recommendation>{recommendation}</recommendation>"
 
     def insert_kv(self, user_prompt, kv_string):
         # Split the key-value string by ';' to get individual pairs
@@ -189,16 +206,22 @@ class Alignment:
                 user_prompt = user_prompt.replace(f"{{{key}}}", value)
         return user_prompt
 
-
-    def generate_revised_prompt(self, feedback, prompt, openai_response, aws_response, eval_model_id):
-        pattern = r'<recommendation>(.*?)</recommendation>'
+    def generate_revised_prompt(
+        self, feedback, prompt, openai_response, aws_response, eval_model_id
+    ):
+        pattern = r"<recommendation>(.*?)</recommendation>"
         matches = re.findall(pattern, feedback, re.DOTALL)
         if len(matches):
             feedback = matches[0]
-        revised_prompt = generate_revised_prompt_template.format(_feedback=feedback, _prompt=prompt, _OpenAI=openai_response, _Bedrock=aws_response)
+        revised_prompt = generate_revised_prompt_template.format(
+            _feedback=feedback,
+            _prompt=prompt,
+            _OpenAI=openai_response,
+            _Bedrock=aws_response,
+        )
         aws_result = self.generate_bedrock_response(revised_prompt, eval_model_id)
-        pattern = r'<revised_prompt>(.*?)</revised_prompt>'
+        pattern = r"<revised_prompt>(.*?)</revised_prompt>"
         matches = re.findall(pattern, aws_result, re.DOTALL)
         # remove all the \n and []
-        matches = matches[0]#.replace("\n", "").replace("[", "").replace("]", "")
+        matches = matches[0]  # .replace("\n", "").replace("[", "").replace("]", "")
         return matches.strip()
