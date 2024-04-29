@@ -1,11 +1,24 @@
+import os
 import json
 
 import boto3
 from botocore.config import Config
+from dotenv import load_dotenv
 
-with open("PromptGuide.md") as f:
+load_dotenv()
+
+# Get the directory where the current script is located
+current_script_path = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the full path to the file
+prompt_guide_path = os.path.join(current_script_path, "PromptGuide.md")
+
+# Open the file using the full path
+with open(prompt_guide_path, 'r') as f:
     PromptGuide = f.read()
-region_name = "us-west-2"
+
+region_name = os.getenv("REGION_NAME")
+
 session = boto3.Session()
 retry_config = Config(
     region_name=region_name,
