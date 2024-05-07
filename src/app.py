@@ -10,14 +10,15 @@ from ape import APE
 from metaprompt import MetaPrompt
 from optimize import Alignment
 from translate import GuideBased
+from application.soe_prompt import SOEPrompt
 
 # ape = APE()
 rewrite = GuideBased()
 alignment = Alignment()
 metaprompt = MetaPrompt()
+soeprompt = SOEPrompt()
 
 load_dotenv()
-
 
 def generate_prompt(original_prompt, level):
     if level == "One-time Generation":
@@ -286,4 +287,29 @@ with gr.Blocks(
             outputs=revised_prompt_output,
         )
 
+    with gr.Tab("SOE-Optiomized Product Description Generator"):
+        with gr.Row():
+            with gr.Column():
+                product_category = gr.Textbox(label="Product Category", placeholder="Enter the product category")
+                brand_name = gr.Textbox(label="Brand Name", placeholder="Enter the brand name")
+                usage_description = gr.Textbox(label="Usage Description", placeholder="Enter the usage description")
+                target_customer = gr.Textbox(label="Target Customer", placeholder="Enter the target customer")
+            with gr.Column():
+                image_preview = gr.Gallery(label="Uploaded Images", show_label=False, elem_id="image_preview")
+                image_upload = gr.UploadButton("Upload Product Image (Optional)", file_types=["image", "video"], file_count="multiple")
+                generate_button = gr.Button("Generate Product Description")
+        with gr.Row():
+            product_description = gr.Textbox(label="Generated Product Description", lines=10, interactive=False)
+        generate_button.click(
+            soeprompt.generate_description,
+            inputs=[product_category, brand_name, usage_description, target_customer, image_upload],
+            outputs=product_description,
+        )
+        image_upload.upload(lambda images: images, inputs=image_upload, outputs=image_preview)
+        css = """
+        #image_preview .grid-container {
+            grid-template-columns: repeat(2, 1fr);
+            height: auto;
+        }
+        """
 demo.launch()
