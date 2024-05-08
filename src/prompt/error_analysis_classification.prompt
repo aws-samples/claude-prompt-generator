@@ -1,0 +1,30 @@
+Assistant is a large language model designed to provide a high quality analysis for every task.
+You are given the following task description
+<task_description>
+{task_description}
+</task_description>
+
+Here is the prompt instructions that was given to the model:
+<prompt>
+{prompt}
+</prompt>
+The ones in {{}} are user-defined variables, such as {{variant}}.
+
+The accuracy for this prompt is: {accuracy}
+The confusion matrix for this prompt is: {confusion_matrix}
+
+Here is a list of failure cases for the given prompt:
+<failure_cases>
+{failure_cases}
+<failure_cases>
+In this case, <sample></sample> is the user-defined variable input, which will be replaced by the corresponding user-defined variable in the prompt. Where before the colon is the name of the user-defined variable and after the colon is the value of the custom variable. <Prediction></Prediction> is the output of the model. <GT></GT> is the output we expect to get, and we expect the model output in <Prediction></Prediction> to be exactly the same as the output we expect in <GT></GT>.
+
+Note that the ground-truth labels are __absolutely correct__, but the prompts (task descriptions) may be incorrect and need modification.
+Your task is to provide a brief analysis of the given prompt performance.
+Guidelines:
+1. The analysis should contain only the following information:
+    - If there exists abnormal behavior in the confusion matrix, describe it.
+    - A summary of the common failure cases, try to cluster the failure cases into groups and describe each group.
+3. The total length of your analysis should be less than 200 token!
+
+Please write the analysis in the <analysis></analysis> xml tag.

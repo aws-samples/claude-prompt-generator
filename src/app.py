@@ -7,6 +7,7 @@ import gradio as gr
 from dotenv import load_dotenv
 
 from ape import APE
+from calibration import CalibrationPrompt
 from metaprompt import MetaPrompt
 from optimize import Alignment
 from translate import GuideBased
@@ -17,6 +18,7 @@ rewrite = GuideBased()
 alignment = Alignment()
 metaprompt = MetaPrompt()
 soeprompt = SOEPrompt()
+calibration = CalibrationPrompt()
 
 load_dotenv()
 
@@ -312,4 +314,31 @@ with gr.Blocks(
             height: auto;
         }
         """
+    with gr.Tab("Prompt Calibration"):
+        default_code = '''
+def postprocess(llm_output):
+    return llm_output
+'''.strip()
+        with gr.Row():
+            with gr.Column(scale=2):
+                calibration_task = gr.Textbox(label="Please input your task", lines=3)
+                calibration_prompt_original = gr.Textbox(label="Please input your original prompt", lines=5, placeholder='Summarize the text delimited by triple quotes.\n\n"""{{insert text here}}"""')
+                
+            with gr.Column(scale=2):
+                postprocess_code = gr.Textbox(label="Please input your postprocess code", lines=3, value=default_code)
+                dataset_file = gr.File(file_types=['csv'], type='binary')
+                
+        with gr.Row():
+            with gr.Column(scale=2):
+                calibration_task = gr.Radio(["classification"], value="classification", label="Task type")
+            with gr.Column(scale=2):
+                steps_num = gr.Slider(1, 5, value=1, step=1, label="Epoch")
+                calibration_optimization = gr.Button("Optimization based on prediction")
+        calibration_prompt = gr.Textbox(label="Revised Prompt", lines=3,
+                                        show_copy_button=True,
+                                        interactive=False)
+        calibration_optimization.click(
+                calibration.optimize, inputs=[calibration_task, calibration_prompt_original, dataset_file, postprocess_code, steps_num],
+                outputs=calibration_prompt
+            )
 demo.launch()
