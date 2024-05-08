@@ -107,7 +107,7 @@ with gr.Blocks(
             outputs=[prompt_result, variables_result],
         )
 
-    with gr.Tab("Generate Prompt"):
+    with gr.Tab("Prompt Translation"):
         original_prompt = gr.Textbox(
             label="Please input your original prompt",
             lines=3,
@@ -287,7 +287,7 @@ with gr.Blocks(
             outputs=revised_prompt_output,
         )
 
-    with gr.Tab("SOE-Optiomized Product Description Generator"):
+    with gr.Tab("SOE-Optiomized Product Description"):
         with gr.Row():
             with gr.Column():
                 product_category = gr.Textbox(label="Product Category", placeholder="Enter the product category")

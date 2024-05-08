@@ -25,16 +25,19 @@ The UI is shown as below:
 ![UI](./docs/img/pe-01.png)
 
 **Overall workflow**
-1. Go to the "Prompt生成" tab, input your original OpenAI prompt and click "优化Prompt" button to get the initial Claude prompt.
-![step 1](./docs/img/2.png)
+1. **Initial Prompt Generation (User From Scratch)**: Go to the "Meta Prompt" tab, input your task e.g. draft respond email for customer complaint and associate vairables, e.g. customer complaint, and click "Generate Prompt" button to get the initial Claude prompt.
+![Prompt Generation](./docs/img/pe-02.png)
 
-2. [Experimental] Go to the "Prompt评估" tab, input your original OpenAI prompt and initial Claude prompt, click "调用Prompt" button to generate the response. Note if user have specific system template, please go the [app.py](./src/app.py) and modify the marco `default_system` to fit your own template.
-![step 2](./docs/img/3.png)
+2. **Existing Prompt Translation (User From OpenAI)**: Go to the "Prompt Translation" tab, input your original OpenAI prompt and click "Revise Prompt" button to get the initial Claude prompt.
+![Prompt Translation](./docs/img/pe-03.png)
 
-3. [Experimental] Go to the "Prompt评估" tab, input your feedback on both response manually or use the "自动评估Prompt效果" button to generate the difference automatically or both, then click "修正Prompt" button to submit the feedback and get the updated Claude prompt.
-![step 3](./docs/img/4.png)
+3. **Prompt Evaluation**: Go to the "Prompt Evaluation" tab, input your original OpenAI prompt and initial Claude prompt, click "Replace Variables in Original Prompt" button to replace the variable with your actual value, then click the "Execute prompt" button to check the response in output box. 
+![Prompt Evaluation 01](./docs/img/pe-04.png)
+Input your feedback on both response manually or use the "Auto-evaluate the Prompt Effect" button to generate the revised recommendation, then click "Iterate Prompt" button to submit the revise and get the updated Claude prompt, you can repeat such process until you feel the Claude prompt is align or surpass the original prompt.
+![Prompt Evaluation 02](./docs/img/pe-05.png)
 
-4. Repeat step 2 and 3 until the Claude prompt is align or surpass the original prompt.
+4. [Experimental]: We also offer a function to generate the prompt to genenerate SOE-optiomized product description to be published on e-commerce website, you can try the function in the "SOE-Optiomized Product Description" tab.
+![Experimental SOE](./docs/img/pe-06.png)
 
 ## Security
 
