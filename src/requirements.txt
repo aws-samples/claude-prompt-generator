@@ -1,4 +1,4 @@
-gradio==4.24.0
+gradio==4.36.0
 gradio_client==0.14.0
 boto3==1.34.72
 openai==1.14.3
