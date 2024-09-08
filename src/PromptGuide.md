@@ -236,7 +236,7 @@ I will tell you the name of an animal. Please respond with the noise that animal
 <animal>{{ANIMAL}}</animal>
 ```
 
-As a general rule, you should ways separate your variable inputs from the rest of your prompt using XML tags. This makes it clear to Claude where the examples or data begin and end, leading to more accurate responses.
+As a general rule, you should always separate your variable inputs from the rest of your prompt using XML tags. This makes it clear to Claude where the examples or data begin and end, leading to more accurate responses.
 
 #### Requesting structured output
 
