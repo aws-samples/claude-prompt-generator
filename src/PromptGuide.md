@@ -2,7 +2,7 @@
 
 ## Be clear & direct
 
-Suggest Edits When interacting with Claude, providing clear and direct instructions is essential for achieving the best results. Think of Claude like a smart but new employee who has no context on what to do aside from what you explicitly tell them. Just as when you instruct a human for the first time on a task, the more you explain exactly what you want in a straightforward manner, the better and more accurate Claude's response will be.
+When interacting with Claude, providing clear and direct instructions is essential for achieving the best results. Think of Claude like a smart but new employee who has no context on what to do aside from what you explicitly tell them. Just as when you instruct a human for the first time on a task, the more you explain exactly what you want in a straightforward manner, the better and more accurate Claude's response will be.
 
 ### Provide detailed context and instructions
 
@@ -79,7 +79,7 @@ Remember, Claude is a powerful tool, but it relies on your guidance to deliver t
 
 ## Use examples
 
-Suggest EditsExamples are one of the most powerful tools for enhancing Claude's performance and guiding it to produce your desired output. By providing a few well-crafted examples in your prompt, you can significantly improve the accuracy, consistency, and quality of Claude's responses. This technique is particularly effective for tasks that are highly detailed or require structured outputs or adherence to specific formats.
+Examples are one of the most powerful tools for enhancing Claude's performance and guiding it to produce your desired output. By providing a few well-crafted examples in your prompt, you can significantly improve the accuracy, consistency, and quality of Claude's responses. This technique is particularly effective for tasks that are highly detailed or require structured outputs or adherence to specific formats.
 
 ```
 This technique is also known as few-shot prompting (or one-shot prompting if only one example is provided).
@@ -155,7 +155,7 @@ Remember, prompt engineering is an iterative process. Don't be discouraged if yo
 
 ## Give a role
 
-Suggest Edits Claude is a highly capable AI assistant, but sometimes it benefits from having additional context to understand the role it should play in a given conversation. By assigning a role to Claude, you can prime it to respond in a specific way, improve its accuracy and performance, and tailor its tone and demeanor to match the desired context. This technique is also known as role prompting.
+Claude is a highly capable AI assistant, but sometimes it benefits from having additional context to understand the role it should play in a given conversation. By assigning a role to Claude, you can prime it to respond in a specific way, improve its accuracy and performance, and tailor its tone and demeanor to match the desired context. This technique is also known as role prompting.
 
 ### When to use role prompting
 
@@ -198,7 +198,7 @@ To get the most out of role prompting, keep these tips in mind:
 
 # Use XML tags
 
-Suggest EditsXML tags are a powerful tool for structuring prompts and guiding Claude's responses. Claude is particularly familiar with prompts that have XML tags as Claude was exposed to such prompts during training. By wrapping key parts of your prompt (such as instructions, examples, or input data) in XML tags, you can help Claude better understand the context and generate more accurate outputs. This technique is especially useful when working with complex prompts or variable inputs.
+XML tags are a powerful tool for structuring prompts and guiding Claude's responses. Claude is particularly familiar with prompts that have XML tags as Claude was exposed to such prompts during training. By wrapping key parts of your prompt (such as instructions, examples, or input data) in XML tags, you can help Claude better understand the context and generate more accurate outputs. This technique is especially useful when working with complex prompts or variable inputs.
 
 > Looking for more advanced techniques? Check out long context window tips to learn how XML tags can help you make the most of Claude's extended context capabilities.
 
@@ -236,7 +236,7 @@ I will tell you the name of an animal. Please respond with the noise that animal
 <animal>{{ANIMAL}}</animal>
 ```
 
-As a general rule, you should ways separate your variable inputs from the rest of your prompt using XML tags. This makes it clear to Claude where the examples or data begin and end, leading to more accurate responses.
+As a general rule, you should always separate your variable inputs from the rest of your prompt using XML tags. This makes it clear to Claude where the examples or data begin and end, leading to more accurate responses.
 
 #### Requesting structured output
 
@@ -272,7 +272,7 @@ To get the most out of XML tags, keep these tips in mind:
 
 ## Chain prompts
 
-Suggest EditsYou can think of working with large language models like juggling. The more tasks you have Claude handle in a single prompt, the more liable it is to drop something or perform any single task less well. Thus, for complex tasks that require multiple steps or subtasks, we recommend breaking those tasks down into subtasks and chaining prompts to ensure highest quality performance at every step.
+You can think of working with large language models like juggling. The more tasks you have Claude handle in a single prompt, the more liable it is to drop something or perform any single task less well. Thus, for complex tasks that require multiple steps or subtasks, we recommend breaking those tasks down into subtasks and chaining prompts to ensure highest quality performance at every step.
 
 ### What is prompt chaining?
 
@@ -383,7 +383,7 @@ Please expand each sentence in the outline into a paragraph. Use each sentence w
 
 ## Let Claude think
 
-Suggest EditsWhen faced with a complex question or task, it's often beneficial to let Claude think through the problem step-by-step before providing a final answer. This technique, also known as chain of thought (CoT) prompting, can significantly improve the accuracy and nuance of Claude's responses.
+When faced with a complex question or task, it's often beneficial to let Claude think through the problem step-by-step before providing a final answer. This technique, also known as chain of thought (CoT) prompting, can significantly improve the accuracy and nuance of Claude's responses.
 
 ### How to prompt for thinking step-by-step
 
@@ -433,7 +433,7 @@ While encouraging step-by-step thinking can greatly enhance Claude's responses, 
 
 ## Control output format (JSON mode)
 
-Suggest EditsClaude is highly capable of producing output in a wide variety of formats. By providing clear instructions, examples, and prefilled responses, you can guide Claude to generate responses that adhere to your desired structure and style.
+Claude is highly capable of producing output in a wide variety of formats. By providing clear instructions, examples, and prefilled responses, you can guide Claude to generate responses that adhere to your desired structure and style.
 
 ### Specifying the desired format
 
@@ -496,7 +496,7 @@ Now, please write a poem about a sunset, following the formatting of the example
 
 ## Long context window tips
 
-Suggest EditsClaude's extended context window (200K tokens for Claude 3 models) enables it to handle complex tasks that require processing large amounts of information. Claude's extended context window also enables you to simplify workflows that previously required splitting inputs to fit within shorter context windows. By combining inputs into a single prompt, you can streamline your process and take full advantage of Claude's capabilities.
+Claude's extended context window (200K tokens for Claude 3 models) enables it to handle complex tasks that require processing large amounts of information. Claude's extended context window also enables you to simplify workflows that previously required splitting inputs to fit within shorter context windows. By combining inputs into a single prompt, you can streamline your process and take full advantage of Claude's capabilities.
 
 For example, if your previous application required splitting a long document into multiple parts and processing each part separately, you can now provide the entire document to Claude in a single prompt. This not only simplifies your code but also allows Claude to have a more comprehensive understanding of the context, potentially leading to better results.
 
