@@ -131,7 +131,7 @@ If the question cannot be answered by the document, say "Cannot answer the quest
                 "anthropic_version": "bedrock-2023-05-31",
             }
         )
-        modelId = "anthropic.claude-3-sonnet-20240229-v1:0"  # anthropic.claude-3-sonnet-20240229-v1:0 "anthropic.claude-3-haiku-20240307-v1:0"
+        modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0"  # anthropic.claude-3-sonnet-20240229-v1:0 "anthropic.claude-3-haiku-20240307-v1:0"
         accept = "application/json"
         contentType = "application/json"
 
@@ -179,7 +179,7 @@ Output example: {lang_example}
                 "anthropic_version": "bedrock-2023-05-31",
             }
         )
-        modelId = modelId = "anthropic.claude-3-sonnet-20240229-v1:0"
+        modelId = "anthropic.claude-3-sonnet-20240229-v1:0"
         accept = "application/json"
         contentType = "application/json"
 
